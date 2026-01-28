@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARCHON - Static Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            min-height: 100vh;
+            background-color: #000;
+            color: #fff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            text-align: center;
+            max-width: 600px;
+        }
+        
+        h1 {
+            font-size: 72px;
+            font-weight: 300;
+            letter-spacing: 0.3em;
+            margin-bottom: 20px;
+        }
+        
+        .success {
+            font-size: 24px;
+            color: #4ade80;
+            margin-bottom: 40px;
+        }
+        
+        .info-box {
+            border: 1px solid #333;
+            padding: 30px;
+            margin-top: 40px;
+            background-color: #0a0a0a;
+        }
+        
+        .info-box p {
+            font-size: 16px;
+            color: #999;
+            margin: 10px 0;
+            line-height: 1.6;
+        }
+        
+        .checkmark {
+            color: #4ade80;
+            margin-right: 8px;
+        }
+        
+        .warning {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #1a1a0a;
+            border-left: 3px solid #fbbf24;
+            color: #fbbf24;
+            font-size: 14px;
+            text-align: left;
+        }
+        
+        .next-steps {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #0a1a0a;
+            border-left: 3px solid #60a5fa;
+            color: #60a5fa;
+            font-size: 14px;
+            text-align: left;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ARCHON</h1>
+        
+        <div class="success">
+            ✅ STATIC HTML WORKING!
+        </div>
+        
+        <div class="info-box">
+            <p><span class="checkmark">✓</span> Vercel deployment: SUCCESS</p>
+            <p><span class="checkmark">✓</span> File serving: SUCCESS</p>
+            <p><span class="checkmark">✓</span> Basic HTML/CSS: SUCCESS</p>
+            <p style="margin-top: 20px; color: #fff;">
+                This is a pure HTML/CSS page. No React, no build process, no dependencies.
+            </p>
+        </div>
+        
+        <div class="warning">
+            <strong>⚠️ What This Means:</strong><br><br>
+            Since this static HTML page works, but the React versions don't, the issue is with:<br>
+            • The Vite build process<br>
+            • How React is being bundled<br>
+            • Module resolution in the build<br>
+            <br>
+            This is NOT an issue with Vercel or your account.
+        </div>
+        
+        <div class="next-steps">
+            <strong>📋 Next Steps:</strong><br><br>
+            1. Confirm you can see this page<br>
+            2. I'll create a working React version using a different build approach<br>
+            3. We'll get the full ARCHON app deployed properly<br>
+            <br>
+            <strong>The good news:</strong> Vercel works perfectly. We just need to fix the React build configuration.
+        </div>
+    </div>
+    
+    <script>
+        // Confirm JavaScript is working
+        console.log('✅ JavaScript is executing');
+        console.log('✅ Page loaded successfully');
+        console.log('Environment:', {
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString()
+        });
+    </script>
+</body>
+</html>
