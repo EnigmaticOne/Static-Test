@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ARCHON - Where Art, Value, and Legacy Are Preserved</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background-color: #000;
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Navigation */
+        nav {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            background-color: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 20px;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: 300;
+            letter-spacing: 0.3em;
+            cursor: pointer;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: 300;
+            letter-spacing: 0.05em;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            background: none;
+            color: #fff;
+        }
+        
+        .btn-primary {
+            background-color: #fff;
+            color: #000;
+        }
+        
+        .btn-primary:hover {
+            background-color: rgba(255,255,255,0.9);
+        }
+        
+        .btn-secondary {
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        
+        .btn-secondary:hover {
+            background-color: rgba(255,255,255,0.05);
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to bottom, transparent, rgba(0,0,0,0.5), #000);
+            z-index: 1;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            max-width: 900px;
+        }
+        
+        h1 {
+            font-size: clamp(48px, 8vw, 96px);
+            font-weight: 300;
+            letter-spacing: 0.2em;
+            margin-bottom: 24px;
+        }
+        
+        .hero-subtitle {
+            font-size: clamp(18px, 3vw, 24px);
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 16px;
+            font-weight: 300;
+        }
+        
+        .hero-description {
+            font-size: 18px;
+            color: rgba(255,255,255,0.5);
+            max-width: 700px;
+            margin: 0 auto 48px;
+            line-height: 1.6;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-large {
+            padding: 16px 40px;
+            font-size: 14px;
+            min-width: 200px;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background-color: rgba(0,0,0,0.9);
+            backdrop-filter: blur(8px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background-color: rgb(9, 9, 11);
+            border: 1px solid rgba(255,255,255,0.1);
+            max-width: 480px;
+            width: 100%;
+            position: relative;
+            padding: 40px;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            background: none;
+            border: none;
+            color: rgba(255,255,255,0.4);
+            cursor: pointer;
+            font-size: 24px;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-close:hover {
+            color: #fff;
+        }
+        
+        .modal h2 {
+            font-size: 28px;
+            font-weight: 300;
+            margin-bottom: 8px;
+            letter-spacing: 0.05em;
+        }
+        
+        .modal p {
+            color: rgba(255,255,255,0.5);
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 14px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 8px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background-color: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            font-size: 14px;
+            font-family: inherit;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: rgba(255,255,255,0.3);
+        }
+        
+        .vault-type-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .vault-type-option {
+            padding: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+        
+        .vault-type-option:hover {
+            border-color: rgba(255,255,255,0.2);
+        }
+        
+        .vault-type-option.selected {
+            border-color: rgba(255,255,255,0.3);
+            background-color: rgba(255,255,255,0.05);
+        }
+        
+        .vault-type-option h3 {
+            font-size: 18px;
+            font-weight: 300;
+            margin-bottom: 8px;
+        }
+        
+        .vault-type-option p {
+            font-size: 14px;
+            color: rgba(255,255,255,0.6);
+            margin: 0;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            border-left: 3px solid;
+            font-size: 14px;
+        }
+        
+        .alert-error {
+            background-color: rgba(239, 68, 68, 0.1);
+            border-color: rgb(239, 68, 68);
+            color: rgb(252, 165, 165);
+        }
+        
+        .alert-success {
+            background-color: rgba(34, 197, 94, 0.1);
+            border-color: rgb(34, 197, 94);
+            color: rgb(134, 239, 172);
+        }
+        
+        /* Vault View */
+        .vault {
+            display: none;
+            min-height: 100vh;
+        }
+        
+        .vault.active {
+            display: block;
+        }
+        
+        .vault-header {
+            padding: 48px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .vault-header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            gap: 24px;
+        }
+        
+        .vault-info h2 {
+            font-size: 36px;
+            font-weight: 300;
+            margin-bottom: 8px;
+        }
+        
+        .vault-stats {
+            font-size: 14px;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 120px 20px;
+        }
+        
+        .empty-state-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 24px;
+            color: rgba(255,255,255,0.2);
+        }
+        
+        .empty-state h3 {
+            font-size: 24px;
+            font-weight: 300;
+            margin-bottom: 8px;
+        }
+        
+        .empty-state p {
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 32px;
+        }
+        
+        .success-check {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            background-color: rgba(74, 222, 128, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgb(74, 222, 128);
+            font-size: 32px;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="nav">
+        <div class="container">
+            <div class="logo" onclick="showView('landing')">ARCHON</div>
+            <div class="nav-buttons">
+                <span id="userEmail" class="hidden" style="font-size: 14px; color: rgba(255,255,255,0.5);"></span>
+                <button id="signInBtn" class="btn" onclick="openModal('login')">Sign In</button>
+                <button id="startFreeBtn" class="btn btn-primary" onclick="openModal('signup')">Start Free</button>
+                <button id="logoutBtn" class="btn btn-secondary hidden" onclick="logout()">Sign Out</button>
+                <button id="myVaultBtn" class="btn hidden" onclick="showView('vault')">My Vault</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Landing View -->
+    <div id="landing" class="landing">
+        <section class="hero">
+            <div class="hero-content">
+                <h1>ARCHON</h1>
+                <p class="hero-subtitle">Where Art, Value, and Legacy Are Preserved</p>
+                <p class="hero-description">
+                    The first digital vault built for creative works and valuable collections.
+                    Not social media. Not cloud storage. A permanent, professional record of what matters most.
+                </p>
+                <div class="hero-buttons">
+                    <button class="btn btn-primary btn-large" onclick="openModal('signup')">Start Free — 5 Assets</button>
+                    <button class="btn btn-secondary btn-large" onclick="scrollToPricing()">View Pricing</button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Vault View -->
+    <div id="vault" class="vault">
+        <section class="vault-header">
+            <div class="container">
+                <div class="vault-header-content">
+                    <div class="vault-info">
+                        <h2 id="vaultTitle">Your Vault</h2>
+                        <p class="vault-stats">
+                            <span id="assetCount">0</span> of <span id="assetLimit">5</span> assets · 
+                            <span id="planTier">STARTER</span> Plan
+                        </p>
+                    </div>
+                    <button id="uploadBtn" class="btn btn-primary" onclick="uploadAsset()">
+                        <span>+ NEW ASSET</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section class="container" style="padding: 48px 20px;">
+            <div id="emptyState" class="empty-state">
+                <div class="empty-state-icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                    </svg>
+                </div>
+                <h3>Your vault is empty</h3>
+                <p>Upload your first asset to get started</p>
+                <button class="btn btn-primary" onclick="uploadAsset()">UPLOAD FIRST ASSET</button>
+            </div>
+        </section>
+    </div>
+
+    <!-- Signup Modal -->
+    <div id="signupModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('signup')">×</button>
+            
+            <div id="signupStep1">
+                <h2>Create Your Account</h2>
+                <p>Start preserving your assets today. Free forever.</p>
+                
+                <div id="signupError" class="alert alert-error hidden"></div>
+                
+                <form id="signupForm" onsubmit="handleSignupStep1(event)">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" id="signupName" required placeholder="John Doe">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="signupEmail" required placeholder="john@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="signupPassword" required minlength="8" placeholder="Minimum 8 characters">
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Continue</button>
+                    <p style="text-align: center; font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 16px;">
+                        By signing up, you agree to our Terms of Service and Privacy Policy
+                    </p>
+                </form>
+            </div>
+
+            <div id="signupStep2" class="hidden">
+                <h2>Choose Your Vault Type</h2>
+                <p>This helps us customize your experience. You can change this later.</p>
+                
+                <div class="vault-type-selector">
+                    <div class="vault-type-option" onclick="selectVaultType('creator')">
+                        <h3>Creator Vault</h3>
+                        <p>For artists, photographers, designers, and creative professionals documenting their work.</p>
+                    </div>
+                    <div class="vault-type-option" onclick="selectVaultType('collector')">
+                        <h3>Collector Vault</h3>
+                        <p>For collectors of art, watches, wine, memorabilia, and other valuable assets.</p>
+                    </div>
+                </div>
+                
+                <button id="createVaultBtn" class="btn btn-primary" style="width: 100%;" disabled onclick="createAccount()">Create My Vault</button>
+                <button class="btn btn-secondary" style="width: 100%; margin-top: 12px;" onclick="backToStep1()">Back</button>
+            </div>
+
+            <div id="signupStep3" class="hidden">
+                <div class="success-check">✓</div>
+                <h2 style="text-align: center;">Welcome to ARCHON</h2>
+                <p style="text-align: center;">Your vault is ready. Time to preserve what matters.</p>
+                
+                <div style="background-color: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 24px; margin: 24px 0;">
+                    <h3 style="font-size: 14px; font-weight: 300; margin-bottom: 16px;">Your Free Account Includes:</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="margin-bottom: 8px; font-size: 14px; color: rgba(255,255,255,0.7);">✓ 5 assets with permanent storage</li>
+                        <li style="margin-bottom: 8px; font-size: 14px; color: rgba(255,255,255,0.7);">✓ Private vault with password-protected sharing</li>
+                        <li style="margin-bottom: 8px; font-size: 14px; color: rgba(255,255,255,0.7);">✓ Basic documentation and provenance tracking</li>
+                        <li style="font-size: 14px; color: rgba(255,255,255,0.7);">✓ 3 PDF exports per month</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal('login')">×</button>
+            
+            <h2>Welcome Back</h2>
+            <p>Sign in to access your vault.</p>
+            
+            <div id="loginError" class="alert alert-error hidden"></div>
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" id="loginEmail" required placeholder="john@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required placeholder="Enter your password">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Sign In</button>
+                <p style="text-align: center; font-size: 14px; color: rgba(255,255,255,0.5); margin-top: 16px;">
+                    Don't have an account? 
+                    <a href="#" onclick="switchToSignup(event)" style="color: #fff; text-decoration: none;">Sign up free</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase
+        const supabase = window.supabase.createClient(
+            'https://jcyoxdtdihgpxsrpfufs.supabase.co',
+            'sb_publishable_aQnzeBSvUyKV12v2aaGMzQ_vwq2Zkce'
+        );
+
+        let selectedVaultType = null;
+        let currentUser = null;
+        let userProfile = null;
+
+        // Check for existing session
+        async function checkSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                currentUser = session.user;
+                await loadUserData();
+                showView('vault');
+                updateNavigation(true);
+            }
+        }
+
+        // Auth state listener
+        supabase.auth.onAuthStateChange((event, session) => {
+            if (session) {
+                currentUser = session.user;
+                loadUserData();
+            } else {
+                currentUser = null;
+                userProfile = null;
+            }
+        });
+
+        async function loadUserData() {
+            if (!currentUser) return;
+
+            const { data } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', currentUser.id)
+                .single();
+
+            if (data) {
+                userProfile = data;
+                updateVaultDisplay();
+            }
+        }
+
+        function updateVaultDisplay() {
+            if (!userProfile) return;
+
+            document.getElementById('vaultTitle').textContent = 
+                userProfile.vault_type === 'creator' ? 'Creative Vault' : 'Collection Vault';
+            document.getElementById('assetCount').textContent = userProfile.asset_count || 0;
+            document.getElementById('assetLimit').textContent = 
+                userProfile.plan_tier === 'starter' ? '5' : '∞';
+            document.getElementById('planTier').textContent = 
+                (userProfile.plan_tier || 'starter').toUpperCase();
+            document.getElementById('userEmail').textContent = currentUser.email;
+        }
+
+        function updateNavigation(loggedIn) {
+            document.getElementById('signInBtn').classList.toggle('hidden', loggedIn);
+            document.getElementById('startFreeBtn').classList.toggle('hidden', loggedIn);
+            document.getElementById('logoutBtn').classList.toggle('hidden', !loggedIn);
+            document.getElementById('myVaultBtn').classList.toggle('hidden', !loggedIn);
+            document.getElementById('userEmail').classList.toggle('hidden', !loggedIn);
+        }
+
+        async function logout() {
+            await supabase.auth.signOut();
+            currentUser = null;
+            userProfile = null;
+            showView('landing');
+            updateNavigation(false);
+        }
+
+        function showView(view) {
+            document.getElementById('landing').classList.toggle('hidden', view !== 'landing');
+            document.getElementById('vault').classList.toggle('active', view === 'vault');
+        }
+
+        function openModal(type) {
+            document.getElementById(type + 'Modal').classList.add('active');
+        }
+
+        function closeModal(type) {
+            document.getElementById(type + 'Modal').classList.remove('active');
+            if (type === 'signup') {
+                resetSignupForm();
+            }
+        }
+
+        function resetSignupForm() {
+            document.getElementById('signupStep1').classList.remove('hidden');
+            document.getElementById('signupStep2').classList.add('hidden');
+            document.getElementById('signupStep3').classList.add('hidden');
+            document.getElementById('signupForm').reset();
+            selectedVaultType = null;
+        }
+
+        function handleSignupStep1(e) {
+            e.preventDefault();
+            document.getElementById('signupStep1').classList.add('hidden');
+            document.getElementById('signupStep2').classList.remove('hidden');
+        }
+
+        function backToStep1() {
+            document.getElementById('signupStep2').classList.add('hidden');
+            document.getElementById('signupStep1').classList.remove('hidden');
+        }
+
+        function selectVaultType(type) {
+            selectedVaultType = type;
+            document.querySelectorAll('.vault-type-option').forEach(el => {
+                el.classList.toggle('selected', el.textContent.toLowerCase().includes(type));
+            });
+            document.getElementById('createVaultBtn').disabled = false;
+        }
+
+        async function createAccount() {
+            const name = document.getElementById('signupName').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            
+            document.getElementById('signupError').classList.add('hidden');
+
+            try {
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            full_name: name,
+                            vault_type: selectedVaultType
+                        }
+                    }
+                });
+
+                if (authError) throw authError;
+
+                if (authData.user) {
+                    const { error: profileError } = await supabase
+                        .from('profiles')
+                        .insert([{
+                            id: authData.user.id,
+                            full_name: name,
+                            vault_type: selectedVaultType,
+                            plan_tier: 'starter',
+                            asset_count: 0,
+                            storage_used: 0
+                        }]);
+
+                    if (profileError && profileError.code !== '23505') {
+                        console.error('Profile error:', profileError);
+                    }
+                }
+
+                document.getElementById('signupStep2').classList.add('hidden');
+                document.getElementById('signupStep3').classList.remove('hidden');
+
+                setTimeout(() => {
+                    closeModal('signup');
+                    showView('vault');
+                    updateNavigation(true);
+                }, 2000);
+
+            } catch (error) {
+                document.getElementById('signupError').textContent = error.message;
+                document.getElementById('signupError').classList.remove('hidden');
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            document.getElementById('loginError').classList.add('hidden');
+
+            try {
+                const { error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+
+                if (error) throw error;
+
+                closeModal('login');
+                await loadUserData();
+                showView('vault');
+                updateNavigation(true);
+
+            } catch (error) {
+                document.getElementById('loginError').textContent = error.message;
+                document.getElementById('loginError').classList.remove('hidden');
+            }
+        }
+
+        function switchToSignup(e) {
+            e.preventDefault();
+            closeModal('login');
+            openModal('signup');
+        }
+
+        function uploadAsset() {
+            alert('Asset upload feature coming soon! You can upload images, documents, and track provenance once the full version is deployed.');
+        }
+
+        function scrollToPricing() {
+            alert('Pricing section coming soon!');
+        }
+
+        // Initialize
+        checkSession();
+    </script>
+</body>
+</html>
