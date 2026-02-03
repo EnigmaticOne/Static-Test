@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="galleryTitle">Art Gallery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color, #0a0a0a);
+            color: var(--text-color, #ffffff);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+        }
+        
+        /* Header */
+        header {
+            padding: 80px 0 60px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(36px, 6vw, 72px);
+            font-weight: 400;
+            margin-bottom: 20px;
+            letter-spacing: 0.02em;
+        }
+        
+        .gallery-description {
+            font-size: 18px;
+            color: rgba(255,255,255,0.7);
+            max-width: 700px;
+            margin: 0 auto 40px;
+        }
+        
+        .gallery-meta {
+            font-size: 14px;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        /* Artwork Grid */
+        .artworks {
+            padding: 80px 0;
+        }
+        
+        .artwork-item {
+            margin-bottom: 120px;
+            opacity: 0;
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+        
+        .artwork-item:nth-child(even) {
+            animation-delay: 0.1s;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .artwork-image-container {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto 40px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .artwork-image-container:hover {
+            transform: scale(1.01);
+        }
+        
+        .artwork-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        
+        .artwork-details {
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+        
+        .artwork-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 32px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .artwork-meta {
+            font-size: 16px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 24px;
+        }
+        
+        .artwork-description {
+            font-size: 16px;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.8;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 60px 0 40px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+        }
+        
+        .powered-by {
+            margin-top: 20px;
+        }
+        
+        .powered-by a {
+            color: rgba(255,255,255,0.6);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .powered-by a:hover {
+            color: rgba(255,255,255,0.9);
+        }
+        
+        /* Loading State */
+        .loading {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(255,255,255,0.1);
+            border-top-color: rgba(255,255,255,0.6);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Error State */
+        .error {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .error h1 {
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+        
+        .error p {
+            color: rgba(255,255,255,0.6);
+        }
+        
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+        
+        .lightbox.active {
+            display: flex;
+        }
+        
+        .lightbox img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+        }
+        
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.3s;
+        }
+        
+        .lightbox-close:hover {
+            opacity: 1;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 20px;
+            }
+            
+            header {
+                padding: 40px 0 30px;
+            }
+            
+            .artwork-item {
+                margin-bottom: 80px;
+            }
+            
+            .artwork-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Loading gallery...</p>
+        </div>
+    </div>
+    
+    <div id="lightbox" class="lightbox" onclick="closeLightbox()">
+        <button class="lightbox-close" onclick="closeLightbox()">×</button>
+        <img id="lightboxImage" src="" alt="">
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            
+            // Get slug from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const slug = urlParams.get('slug') || window.location.pathname.split('/').pop();
+            
+            const supabase = window.supabase.createClient(
+                'https://jcyoxdtdihgpxsrpfufs.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjeW94ZHRkaWhncHhzcnBmdWZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1OTkwNzgsImV4cCI6MjA4NTE3NTA3OH0.D3N3jPf0rRdBuUqkaWMZYEuYYkogbEOaoJZfh8NzHNc'
+            );
+            
+            async function loadGallery() {
+                try {
+                    // Fetch gallery
+                    const { data: gallery, error: galleryError } = await supabase
+                        .from('galleries')
+                        .select('*')
+                        .eq('slug', slug)
+                        .eq('visibility', 'public')
+                        .single();
+                    
+                    if (galleryError || !gallery) {
+                        showError('Gallery not found');
+                        return;
+                    }
+                    
+                    // Fetch gallery assets
+                    const { data: galleryAssets, error: assetsError } = await supabase
+                        .from('gallery_assets')
+                        .select(`
+                            *,
+                            asset:assets(*)
+                        `)
+                        .eq('gallery_id', gallery.id)
+                        .order('position');
+                    
+                    if (assetsError) throw assetsError;
+                    
+                    // Increment view count
+                    await supabase
+                        .from('galleries')
+                        .update({ view_count: gallery.view_count + 1 })
+                        .eq('id', gallery.id);
+                    
+                    // Render gallery
+                    renderGallery(gallery, galleryAssets);
+                    
+                } catch (error) {
+                    console.error('Error loading gallery:', error);
+                    showError('Failed to load gallery');
+                }
+            }
+            
+            function renderGallery(gallery, galleryAssets) {
+                // Apply theme
+                if (gallery.theme) {
+                    const theme = gallery.theme;
+                    document.documentElement.style.setProperty('--bg-color', theme.backgroundColor || '#0a0a0a');
+                    document.documentElement.style.setProperty('--text-color', theme.primaryColor || '#ffffff');
+                }
+                
+                // Update title
+                document.getElementById('galleryTitle').textContent = gallery.title;
+                document.title = gallery.title;
+                
+                // Render content
+                const app = document.getElementById('app');
+                app.innerHTML = `
+                    <header>
+                        <div class="container">
+                            <h1>${gallery.title}</h1>
+                            ${gallery.description ? `<p class="gallery-description">${gallery.description}</p>` : ''}
+                            <p class="gallery-meta">${galleryAssets.length} ${galleryAssets.length === 1 ? 'Work' : 'Works'}</p>
+                        </div>
+                    </header>
+                    
+                    <main class="artworks">
+                        <div class="container">
+                            ${galleryAssets.map((item, index) => renderArtwork(item, gallery, index)).join('')}
+                        </div>
+                    </main>
+                    
+                    <footer>
+                        <div class="container">
+                            <p>${gallery.view_count + 1} views</p>
+                            <p class="powered-by">Powered by <a href="https://archon.app" target="_blank">ARCHON</a></p>
+                        </div>
+                    </footer>
+                `;
+            }
+            
+            function renderArtwork(item, gallery, index) {
+                const asset = item.asset;
+                if (!asset) return '';
+                
+                return `
+                    <div class="artwork-item" style="animation-delay: ${index * 0.1}s">
+                        <div class="artwork-image-container" onclick="openLightbox('${asset.image_url}')">
+                            <img src="${asset.image_url}" alt="${asset.title}" class="artwork-image">
+                        </div>
+                        <div class="artwork-details">
+                            <h2 class="artwork-title">${asset.title}</h2>
+                            <p class="artwork-meta">
+                                ${asset.year ? asset.year : ''}
+                                ${asset.year && asset.medium ? ' • ' : ''}
+                                ${asset.medium || ''}
+                                ${(asset.year || asset.medium) && asset.dimensions && gallery.show_dimensions ? ' • ' : ''}
+                                ${asset.dimensions && gallery.show_dimensions ? asset.dimensions : ''}
+                            </p>
+                            ${asset.description && gallery.show_descriptions ? `
+                                <p class="artwork-description">${asset.description}</p>
+                            ` : ''}
+                            ${item.caption ? `
+                                <p class="artwork-description" style="margin-top: 16px; font-style: italic;">${item.caption}</p>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function showError(message) {
+                const app = document.getElementById('app');
+                app.innerHTML = `
+                    <div class="error">
+                        <h1>Gallery Not Found</h1>
+                        <p>${message}</p>
+                    </div>
+                `;
+            }
+            
+            window.openLightbox = function(imageUrl) {
+                document.getElementById('lightboxImage').src = imageUrl;
+                document.getElementById('lightbox').classList.add('active');
+            };
+            
+            window.closeLightbox = function() {
+                document.getElementById('lightbox').classList.remove('active');
+            };
+            
+            // ESC key to close lightbox
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeLightbox();
+                }
+            });
+            
+            loadGallery();
+        })();
+    </script>
+</body>
+</html>

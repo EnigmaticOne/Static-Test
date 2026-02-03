@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="galleryTitle">Collection</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color, #f5f5f5);
+            color: var(--text-color, #1a1a1a);
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Header */
+        header {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 40px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        h1 {
+            font-size: clamp(28px, 5vw, 42px);
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .gallery-description {
+            font-size: 16px;
+            color: #666;
+            max-width: 800px;
+        }
+        
+        .gallery-stats {
+            display: flex;
+            gap: 24px;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        /* Search and Filter */
+        .controls {
+            background: white;
+            padding: 24px 0;
+            border-bottom: 1px solid #e5e5e5;
+        }
+        
+        .search-box {
+            width: 100%;
+            max-width: 400px;
+            padding: 12px 16px;
+            border: 2px solid #e5e5e5;
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: var(--accent-color, #3b82f6);
+        }
+        
+        /* Grid */
+        .grid {
+            padding: 40px 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        
+        .grid-item {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            opacity: 0;
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+        
+        .grid-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .grid-item:nth-child(1) { animation-delay: 0.05s; }
+        .grid-item:nth-child(2) { animation-delay: 0.1s; }
+        .grid-item:nth-child(3) { animation-delay: 0.15s; }
+        .grid-item:nth-child(4) { animation-delay: 0.2s; }
+        .grid-item:nth-child(5) { animation-delay: 0.25s; }
+        .grid-item:nth-child(6) { animation-delay: 0.3s; }
+        
+        .item-image {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            background: #f0f0f0;
+        }
+        
+        .item-content {
+            padding: 20px;
+        }
+        
+        .item-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #1a1a1a;
+        }
+        
+        .item-meta {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        
+        .item-description {
+            font-size: 14px;
+            color: #888;
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .item-price {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--accent-color, #3b82f6);
+            margin-top: 12px;
+        }
+        
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 60px 0 40px;
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .powered-by {
+            margin-top: 16px;
+        }
+        
+        .powered-by a {
+            color: #666;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .powered-by a:hover {
+            color: #1a1a1a;
+        }
+        
+        /* Loading State */
+        .loading {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid #e5e5e5;
+            border-top-color: var(--accent-color, #3b82f6);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Error State */
+        .error {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            max-width: 900px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .modal-image {
+            width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+            background: #f5f5f5;
+        }
+        
+        .modal-body {
+            padding: 32px;
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        
+        .modal-close:hover {
+            transform: scale(1.1);
+        }
+        
+        .modal-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .modal-meta {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 24px;
+        }
+        
+        .modal-description {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #444;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+                gap: 16px;
+            }
+            
+            .item-content {
+                padding: 16px;
+            }
+            
+            .item-title {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Loading collection...</p>
+        </div>
+    </div>
+    
+    <div id="modal" class="modal" onclick="closeModal(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <button class="modal-close" onclick="closeModal()">×</button>
+            <img id="modalImage" class="modal-image" src="" alt="">
+            <div class="modal-body" id="modalBody"></div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const slug = urlParams.get('slug') || window.location.pathname.split('/').pop();
+            
+            const supabase = window.supabase.createClient(
+                'https://jcyoxdtdihgpxsrpfufs.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjeW94ZHRkaWhncHhzcnBmdWZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1OTkwNzgsImV4cCI6MjA4NTE3NTA3OH0.D3N3jPf0rRdBuUqkaWMZYEuYYkogbEOaoJZfh8NzHNc'
+            );
+            
+            let galleryData = null;
+            let assetsData = [];
+            
+            async function loadGallery() {
+                try {
+                    const { data: gallery, error: galleryError } = await supabase
+                        .from('galleries')
+                        .select('*')
+                        .eq('slug', slug)
+                        .eq('visibility', 'public')
+                        .single();
+                    
+                    if (galleryError || !gallery) {
+                        showError('Gallery not found');
+                        return;
+                    }
+                    
+                    const { data: galleryAssets, error: assetsError } = await supabase
+                        .from('gallery_assets')
+                        .select(`
+                            *,
+                            asset:assets(*)
+                        `)
+                        .eq('gallery_id', gallery.id)
+                        .order('position');
+                    
+                    if (assetsError) throw assetsError;
+                    
+                    await supabase
+                        .from('galleries')
+                        .update({ view_count: gallery.view_count + 1 })
+                        .eq('id', gallery.id);
+                    
+                    galleryData = gallery;
+                    assetsData = galleryAssets;
+                    
+                    renderGallery(gallery, galleryAssets);
+                    
+                } catch (error) {
+                    console.error('Error loading gallery:', error);
+                    showError('Failed to load gallery');
+                }
+            }
+            
+            function renderGallery(gallery, galleryAssets) {
+                if (gallery.theme) {
+                    const theme = gallery.theme;
+                    document.documentElement.style.setProperty('--bg-color', theme.backgroundColor || '#f5f5f5');
+                    document.documentElement.style.setProperty('--text-color', theme.primaryColor || '#1a1a1a');
+                    document.documentElement.style.setProperty('--accent-color', theme.accentColor || '#3b82f6');
+                }
+                
+                document.getElementById('galleryTitle').textContent = gallery.title;
+                document.title = gallery.title;
+                
+                const app = document.getElementById('app');
+                app.innerHTML = `
+                    <header>
+                        <div class="container">
+                            <h1>${gallery.title}</h1>
+                            ${gallery.description ? `<p class="gallery-description">${gallery.description}</p>` : ''}
+                            <div class="gallery-stats">
+                                <div class="stat">
+                                    <span>📦</span>
+                                    <span>${galleryAssets.length} items</span>
+                                </div>
+                                <div class="stat">
+                                    <span>👁️</span>
+                                    <span>${gallery.view_count + 1} views</span>
+                                </div>
+                            </div>
+                        </div>
+                    </header>
+                    
+                    <div class="controls">
+                        <div class="container">
+                            <input 
+                                type="text" 
+                                class="search-box" 
+                                placeholder="Search collection..." 
+                                onkeyup="filterItems(this.value)"
+                            >
+                        </div>
+                    </div>
+                    
+                    <main>
+                        <div class="container">
+                            <div class="grid" id="grid">
+                                ${galleryAssets.map((item, index) => renderGridItem(item, gallery, index)).join('')}
+                            </div>
+                        </div>
+                    </main>
+                    
+                    <footer>
+                        <div class="container">
+                            <p>Powered by <a href="https://archon.app" target="_blank">ARCHON</a></p>
+                        </div>
+                    </footer>
+                `;
+            }
+            
+            function renderGridItem(item, gallery, index) {
+                const asset = item.asset;
+                if (!asset) return '';
+                
+                return `
+                    <div class="grid-item" data-title="${asset.title.toLowerCase()}" onclick='openModal(${JSON.stringify(item).replace(/'/g, "&apos;")})'>
+                        <img src="${asset.image_url}" alt="${asset.title}" class="item-image">
+                        <div class="item-content">
+                            <h3 class="item-title">${asset.title}</h3>
+                            <p class="item-meta">
+                                ${asset.year ? asset.year : ''}
+                                ${asset.year && asset.medium ? ' • ' : ''}
+                                ${asset.medium || ''}
+                            </p>
+                            ${asset.description && gallery.show_descriptions ? `
+                                <p class="item-description">${asset.description}</p>
+                            ` : ''}
+                            ${item.price && gallery.show_prices ? `
+                                <p class="item-price">${item.price_currency || '$'}${item.price}</p>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function showError(message) {
+                const app = document.getElementById('app');
+                app.innerHTML = `
+                    <div class="error">
+                        <h1>Collection Not Found</h1>
+                        <p>${message}</p>
+                    </div>
+                `;
+            }
+            
+            window.filterItems = function(query) {
+                const items = document.querySelectorAll('.grid-item');
+                const searchTerm = query.toLowerCase();
+                
+                items.forEach(item => {
+                    const title = item.getAttribute('data-title');
+                    if (title.includes(searchTerm)) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            };
+            
+            window.openModal = function(item) {
+                const asset = item.asset;
+                document.getElementById('modalImage').src = asset.image_url;
+                document.getElementById('modalBody').innerHTML = `
+                    <h2 class="modal-title">${asset.title}</h2>
+                    <p class="modal-meta">
+                        ${asset.year ? asset.year : ''}
+                        ${asset.year && asset.medium ? ' • ' : ''}
+                        ${asset.medium || ''}
+                        ${asset.dimensions && galleryData.show_dimensions ? ' • ' + asset.dimensions : ''}
+                    </p>
+                    ${asset.description && galleryData.show_descriptions ? `
+                        <p class="modal-description">${asset.description}</p>
+                    ` : ''}
+                    ${item.caption ? `
+                        <p class="modal-description" style="margin-top: 16px; font-style: italic;">${item.caption}</p>
+                    ` : ''}
+                    ${item.price && galleryData.show_prices ? `
+                        <p class="item-price" style="font-size: 24px; margin-top: 24px;">${item.price_currency || '$'}${item.price}</p>
+                    ` : ''}
+                `;
+                document.getElementById('modal').classList.add('active');
+            };
+            
+            window.closeModal = function(event) {
+                if (!event || event.target.id === 'modal') {
+                    document.getElementById('modal').classList.remove('active');
+                }
+            };
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') {
+                    closeModal();
+                }
+            });
+            
+            loadGallery();
+        })();
+    </script>
+</body>
+</html>

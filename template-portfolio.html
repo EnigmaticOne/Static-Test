@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title id="galleryTitle">Portfolio</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.0/dist/umd/supabase.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color, #ffffff);
+            color: var(--text-color, #2a2a2a);
+            line-height: 1.6;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 350px;
+            background: var(--bg-color, #ffffff);
+            border-right: 1px solid rgba(0,0,0,0.08);
+            padding: 60px 40px;
+            overflow-y: auto;
+            z-index: 100;
+        }
+        
+        .portfolio-title {
+            font-size: 32px;
+            font-weight: 300;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+        
+        .portfolio-description {
+            font-size: 15px;
+            color: #666;
+            margin-bottom: 32px;
+            line-height: 1.7;
+        }
+        
+        .portfolio-meta {
+            font-size: 13px;
+            color: #999;
+            padding-top: 32px;
+            border-top: 1px solid rgba(0,0,0,0.06);
+        }
+        
+        .meta-item {
+            margin-bottom: 8px;
+        }
+        
+        /* Main Content */
+        .main-content {
+            margin-left: 350px;
+            min-height: 100vh;
+        }
+        
+        .slideshow {
+            position: relative;
+            width: 100%;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+        }
+        
+        .slide.active {
+            opacity: 1;
+            z-index: 1;
+        }
+        
+        .slide-image {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+        }
+        
+        .slide-info {
+            position: absolute;
+            bottom: 40px;
+            left: 40px;
+            right: 40px;
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 24px 32px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .slide-title {
+            font-size: 24px;
+            font-weight: 400;
+            margin-bottom: 8px;
+        }
+        
+        .slide-meta {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        /* Navigation */
+        .nav-button {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            background: rgba(255,255,255,0.9);
+            border: 1px solid rgba(0,0,0,0.08);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+            color: #2a2a2a;
+            transition: all 0.3s;
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .nav-button:hover {
+            background: rgba(255,255,255,1);
+            transform: translateY(-50%) scale(1.05);
+        }
+        
+        .nav-prev {
+            left: 370px;
+        }
+        
+        .nav-next {
+            right: 20px;
+        }
+        
+        /* Progress */
+        .progress {
+            position: fixed;
+            top: 0;
+            left: 350px;
+            right: 0;
+            height: 3px;
+            background: rgba(0,0,0,0.05);
+            z-index: 50;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: var(--accent-color, #2a2a2a);
+            transition: width 0.3s;
+        }
+        
+        /* Counter */
+        .counter {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            font-size: 14px;
+            color: #666;
+            font-weight: 300;
+            z-index: 50;
+        }
+        
+        /* Loading */
+        .loading {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(0,0,0,0.1);
+            border-top-color: rgba(0,0,0,0.6);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Mobile */
+        @media (max-width: 1024px) {
+            .sidebar {
+                position: relative;
+                width: 100%;
+                border-right: none;
+                border-bottom: 1px solid rgba(0,0,0,0.08);
+                padding: 40px 20px;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .progress {
+                left: 0;
+            }
+            
+            .nav-button {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+            
+            .nav-prev {
+                left: 20px;
+            }
+            
+            .slide-info {
+                bottom: 20px;
+                left: 20px;
+                right: 20px;
+                padding: 20px;
+            }
+            
+            .slide-title {
+                font-size: 20px;
+            }
+        }
+        
+        /* Keyboard hint */
+        .keyboard-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 370px;
+            font-size: 12px;
+            color: #999;
+            opacity: 0.7;
+            z-index: 50;
+        }
+        
+        @media (max-width: 1024px) {
+            .keyboard-hint {
+                left: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="loading">
+            <div class="spinner"></div>
+            <p>Loading portfolio...</p>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const slug = urlParams.get('slug') || window.location.pathname.split('/').pop();
+            
+            const supabase = window.supabase.createClient(
+                'https://jcyoxdtdihgpxsrpfufs.supabase.co',
+                'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpjeW94ZHRkaWhncHhzcnBmdWZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk1OTkwNzgsImV4cCI6MjA4NTE3NTA3OH0.D3N3jPf0rRdBuUqkaWMZYEuYYkogbEOaoJZfh8NzHNc'
+            );
+            
+            let currentSlide = 0;
+            let totalSlides = 0;
+            let galleryAssets = [];
+            
+            async function loadGallery() {
+                try {
+                    const { data: gallery, error: galleryError } = await supabase
+                        .from('galleries')
+                        .select('*')
+                        .eq('slug', slug)
+                        .eq('visibility', 'public')
+                        .single();
+                    
+                    if (galleryError || !gallery) {
+                        showError('Gallery not found');
+                        return;
+                    }
+                    
+                    const { data: assets, error: assetsError } = await supabase
+                        .from('gallery_assets')
+                        .select(`
+                            *,
+                            asset:assets(*)
+                        `)
+                        .eq('gallery_id', gallery.id)
+                        .order('position');
+                    
+                    if (assetsError) throw assetsError;
+                    
+                    await supabase
+                        .from('galleries')
+                        .update({ view_count: gallery.view_count + 1 })
+                        .eq('id', gallery.id);
+                    
+                    galleryAssets = assets;
+                    totalSlides = assets.length;
+                    
+                    renderGallery(gallery, assets);
+                    
+                } catch (error) {
+                    console.error('Error loading gallery:', error);
+                    showError('Failed to load gallery');
+                }
+            }
+            
+            function renderGallery(gallery, assets) {
+                if (gallery.theme) {
+                    const theme = gallery.theme;
+                    document.documentElement.style.setProperty('--bg-color', theme.backgroundColor || '#ffffff');
+                    document.documentElement.style.setProperty('--text-color', theme.primaryColor || '#2a2a2a');
+                    document.documentElement.style.setProperty('--accent-color', theme.accentColor || '#2a2a2a');
+                }
+                
+                document.getElementById('galleryTitle').textContent = gallery.title;
+                document.title = gallery.title;
+                
+                const app = document.getElementById('app');
+                app.innerHTML = `
+                    <div class="sidebar">
+                        <h1 class="portfolio-title">${gallery.title}</h1>
+                        ${gallery.description ? `<p class="portfolio-description">${gallery.description}</p>` : ''}
+                        <div class="portfolio-meta">
+                            <div class="meta-item">${assets.length} works</div>
+                            <div class="meta-item">${gallery.view_count + 1} views</div>
+                            <div class="meta-item" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.06);">
+                                Powered by <a href="https://archon.app" target="_blank" style="color: inherit;">ARCHON</a>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="main-content">
+                        <div class="progress">
+                            <div class="progress-bar" id="progressBar"></div>
+                        </div>
+                        
+                        <div class="counter" id="counter">1 / ${assets.length}</div>
+                        
+                        <div class="slideshow" id="slideshow">
+                            ${assets.map((item, index) => renderSlide(item, index)).join('')}
+                        </div>
+                        
+                        <button class="nav-button nav-prev" onclick="prevSlide()">‹</button>
+                        <button class="nav-button nav-next" onclick="nextSlide()">›</button>
+                        
+                        <div class="keyboard-hint">Use ← → keys to navigate</div>
+                    </div>
+                `;
+                
+                updateSlide();
+            }
+            
+            function renderSlide(item, index) {
+                const asset = item.asset;
+                if (!asset) return '';
+                
+                return `
+                    <div class="slide ${index === 0 ? 'active' : ''}" data-index="${index}">
+                        <img src="${asset.image_url}" alt="${asset.title}" class="slide-image">
+                        <div class="slide-info">
+                            <h2 class="slide-title">${asset.title}</h2>
+                            <p class="slide-meta">
+                                ${asset.year ? asset.year : ''}
+                                ${asset.year && asset.medium ? ' • ' : ''}
+                                ${asset.medium || ''}
+                                ${asset.dimensions ? ' • ' + asset.dimensions : ''}
+                            </p>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function updateSlide() {
+                const slides = document.querySelectorAll('.slide');
+                slides.forEach((slide, index) => {
+                    if (index === currentSlide) {
+                        slide.classList.add('active');
+                    } else {
+                        slide.classList.remove('active');
+                    }
+                });
+                
+                const progress = ((currentSlide + 1) / totalSlides) * 100;
+                document.getElementById('progressBar').style.width = progress + '%';
+                document.getElementById('counter').textContent = `${currentSlide + 1} / ${totalSlides}`;
+            }
+            
+            window.nextSlide = function() {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                updateSlide();
+            };
+            
+            window.prevSlide = function() {
+                currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+                updateSlide();
+            };
+            
+            function showError(message) {
+                const app = document.getElementById('app');
+                app.innerHTML = `
+                    <div class="loading">
+                        <h1>Portfolio Not Found</h1>
+                        <p>${message}</p>
+                    </div>
+                `;
+            }
+            
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+                    nextSlide();
+                } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                    prevSlide();
+                }
+            });
+            
+            // Touch navigation
+            let touchStartX = 0;
+            let touchEndX = 0;
+            
+            document.addEventListener('touchstart', (e) => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+            
+            document.addEventListener('touchend', (e) => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
+            
+            function handleSwipe() {
+                if (touchEndX < touchStartX - 50) {
+                    nextSlide();
+                }
+                if (touchEndX > touchStartX + 50) {
+                    prevSlide();
+                }
+            }
+            
+            loadGallery();
+        })();
+    </script>
+</body>
+</html>
